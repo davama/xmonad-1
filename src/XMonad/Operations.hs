@@ -109,13 +109,17 @@ windows f = do
     let oldvisible = concatMap (W.integrate' . W.stack . W.workspace) $ W.current old : W.visible old
         newwindows = W.allWindows ws \\ W.allWindows old
         ws = f old
-    XConf { display = d , normalBorder = nbc, focusedBorder = fbc } <- ask
+    XConf { display = d , normalBorder = nbc, focusedBorder = fbc , masternormalBorder = mnbc , masterfocusedBorder = mfbc } <- ask
 
     mapM_ setInitialProperties newwindows
 
     whenJust (W.peek old) $ \otherw -> do
       nbs <- asks (normalBorderColor . config)
       setWindowBorderWithFallback d otherw nbs nbc
+
+    whenJust (W.peek old) $ \otherw -> do
+      mnbs <- asks (masternormalBorderColor . config)
+      setWindowBorderWithFallback d otherw mnbs mnbc
 
     modify (\s -> s { windowset = ws })
 
@@ -159,6 +163,10 @@ windows f = do
     whenJust (W.peek ws) $ \w -> do
       fbs <- asks (focusedBorderColor . config)
       setWindowBorderWithFallback d w fbs fbc
+
+    whenJust (W.peek ws) $ \w -> do
+      mfbs <- asks (masterfocusedBorderColor . config)
+      setWindowBorderWithFallback d w mfbs mfbc
 
     mapM_ reveal visible
     setTopFocus
